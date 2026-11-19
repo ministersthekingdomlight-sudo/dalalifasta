@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vipendwa - DalaliFasta</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; padding-bottom: 70px; }
+
+    header {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(16px);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    h1 { font-size: 22px; font-weight: 800; color: #f8fafc; margin-bottom: 14px; }
+
+    .container { max-width: 600px; margin: 20px auto; padding: 0 16px; }
+
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
+    .tab { background: #1e293b; color: #94a3b8; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .tab.active { background: #2563eb; color: white; }
+
+    .property-card {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      position: relative;
+    }
+
+    .property-thumb { width: 85px; height: 85px; border-radius: 12px; object-fit: cover; background: #334155; }
+    .property-info { flex: 1; }
+    .property-info h4 { font-size: 15px; font-weight: 700; color: #f8fafc; margin-bottom: 2px; }
+    .property-info .price { font-size: 16px; font-weight: 800; color: #38bdf8; margin-bottom: 4px; }
+    .property-info .location { font-size: 13px; color: #94a3b8; }
+
+    .heart-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #ef4444; position: absolute; top: 12px; right: 14px; }
+
+    /* Bottom Nav Bar */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000;
+    }
+    .nav-item { text-decoration: none; color: #94a3b8; font-size: 12px; font-weight: 600; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .nav-item.active { color: #38bdf8; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="max-width: 600px; margin: 0 auto;">
+      <h1>Vipendwa</h1>
+      <div class="tabs">
+        <button class="tab active" onclick="filterType('Nyumba')">Nyumba</button>
+        <button class="tab" onclick="filterType('Viwanja')">Viwanja</button>
+        <button class="tab" onclick="filterType('Mali')">Mali</button>
+        <button class="tab" onclick="filterType('Gari')">Gari</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container" id="favorites-list">
+    <p style="text-align:center; color:#94a3b8; margin-top:40px;">Inapakia vipendwa...</p>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">🏠 Nyumbani</a>
+    <a href="map.html" class="nav-item">🗺️ Tafuta</a>
+    <a href="favorites.html" class="nav-item active">❤️ Vipendwa</a>
+    <a href="notifications.html" class="nav-item">🔔 Arifa</a>
+  </nav>
+
+  <script>
+    const SUPABASE_URL = 'https://fwpzpihwxylnyejthnxq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3cHpwaWh3eHlsbnllanRobnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0ODE2ODAsImV4cCI6MjEwNzA1NzY4MH0.SMaJxy35YVHs4_Lj1C4v72V069CJEypvxsBhjC65h6I';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadFavorites() {
+      const container = document.getElementById('favorites-list');
+      const { data, error } = await supabaseClient.from('properties').select('*').limit(5);
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#94a3b8;">Hakuna vipendwa vilivyohifadhiwa bado.</p>';
+        return;
+      }
+
+      container.innerHTML = data.map(item => `
+        <div class="property-card">
+          <img src="${item.image_url || 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600'}" class="property-thumb" alt="${item.title}">
+          <div class="property-info">
+            <h4>${item.title}</h4>
+            <div class="price">Tsh ${Number(item.price).toLocaleString()}</div>
+            <div class="location">📍 ${item.location}</div>
+          </div>
+          <button class="heart-btn">❤️</button>
+        </div>
+      `).join('');
+    }
+
+    window.onload = loadFavorites;
+  </script>
+</body>
+</html>

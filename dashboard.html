@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0e8f80">
+  <title>Dashibodi ya Dalali - DalaliFasta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    if (!localStorage.getItem('dalali_user')) {
+      window.location.replace('login.html');
+    }
+  </script>
+  <style>
+    :root {
+      --brand: #0e8f80;
+      --brand-dark: #0a6b60;
+      --brand-soft: #e3f4f1;
+      --ink: #14201e;
+      --muted: #6b7a77;
+      --line: #e6ecea;
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --gold: #ffb300;
+      --whatsapp: #25D366;
+      --danger: #e53935;
+      --radius: 24px;
+      --container-max: 1200px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(244, 247, 246, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .navbar {
+      max-width: var(--container-max); margin: 0 auto;
+      padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo-img { width: 42px; height: 42px; object-fit: cover; border-radius: 12px; background: #fff; }
+    .logo-text { font-size: 18px; font-weight: 800; }
+    .logo-text span { color: var(--brand); }
+
+    .desktop-links { display: none; align-items: center; gap: 24px; list-style: none; }
+    .desktop-links a { font-size: 14px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .desktop-links a.active, .desktop-links a:hover { color: var(--brand); }
+
+    .btn-logout {
+      padding: 8px 16px; border-radius: 999px;
+      background: #ffebee; color: var(--danger);
+      font-size: 12.5px; font-weight: 700;
+    }
+
+    .main-container { max-width: var(--container-max); margin: 0 auto; padding: 18px; }
+
+    .profile-banner {
+      background: linear-gradient(135deg, var(--brand-dark), var(--brand));
+      border-radius: var(--radius);
+      padding: 22px;
+      color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+      box-shadow: 0 12px 28px rgba(14, 143, 128, 0.22);
+      margin-bottom: 22px;
+    }
+    .profile-left { display: flex; align-items: center; gap: 14px; }
+    .avatar-wrapper { position: relative; cursor: pointer; }
+    .agent-avatar-lg {
+      width: 68px; height: 68px; border-radius: 50%;
+      background: rgba(255,255,255,0.2); border: 3px solid #fff;
+      display: grid; place-items: center; font-size: 26px; font-weight: 700;
+      object-fit: cover; overflow: hidden;
+    }
+    .agent-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+    .edit-pic-badge {
+      position: absolute; bottom: 0; right: 0;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--gold); color: var(--ink);
+      display: grid; place-items: center; font-size: 12px; font-weight: 700;
+      border: 2px solid #fff;
+    }
+    .agent-name-title { font-size: 20px; font-weight: 700; }
+    .agent-phone-sub { font-size: 13px; opacity: 0.92; margin-top: 2px; }
+
+    .stats-wrapper { display: flex; gap: 10px; flex-wrap: wrap; }
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.16);
+      padding: 10px 16px; border-radius: 18px; text-align: center;
+    }
+    .stat-num { font-size: 18px; font-weight: 800; }
+    .stat-lbl { font-size: 11px; opacity: 0.9; }
+
+    .dash-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+    .card {
+      background: var(--card); border-radius: var(--radius);
+      padding: 22px; box-shadow: 0 6px 22px rgba(20, 32, 30, 0.06);
+      border: 1px solid var(--line);
+    }
+    .card-title { font-size: 17px; font-weight: 700; margin-bottom: 16px; color: var(--ink); }
+
+    .type-switcher {
+      display: flex; background: var(--bg);
+      padding: 5px; border-radius: 999px; margin-bottom: 18px;
+    }
+    .switch-btn {
+      flex: 1; padding: 10px 12px; border-radius: 999px;
+      font-size: 13px; font-weight: 600; color: var(--muted); background: transparent;
+    }
+    .switch-btn.active { background: var(--brand); color: #fff; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 6px; }
+    .form-control {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid var(--line); border-radius: 16px;
+      background: var(--bg); font: inherit; font-size: 13.5px; outline: none;
+    }
+    .form-control:focus { border-color: var(--brand); background: #fff; }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .upload-box {
+      border: 2px dashed #b8d8d3; background: var(--brand-soft);
+      border-radius: 18px; padding: 18px; text-align: center; cursor: pointer; display: block;
+    }
+    .upload-text { font-size: 13px; font-weight: 600; color: var(--brand-dark); }
+
+    .btn-submit {
+      width: 100%; padding: 14px; border-radius: 999px;
+      background: var(--brand); color: #fff; font-size: 14.5px; font-weight: 700;
+      margin-top: 6px;
+    }
+    .btn-submit:disabled { opacity: 0.6; }
+
+    #form-status {
+      margin-top: 14px; padding: 12px; border-radius: 14px;
+      font-size: 13px; font-weight: 600; text-align: center; display: none;
+    }
+    .status-loading { display: block !important; background: var(--brand-soft); color: var(--brand-dark); }
+    .status-success { display: block !important; background: #e8f5e9; color: #2e7d32; }
+    .status-error { display: block !important; background: #ffebee; color: #c62828; }
+
+    .my-items-list { display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; }
+    .my-item-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px; border-radius: 18px;
+      background: var(--bg); border: 1px solid var(--line);
+    }
+    .my-item-thumb { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; flex-shrink: 0; background: #000; }
+    .my-item-info { flex: 1; min-width: 0; }
+    .my-item-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px;
+      background: var(--brand-soft); color: var(--brand-dark);
+    }
+    .my-item-title { font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .my-item-price { font-size: 13px; font-weight: 700; color: var(--brand); }
+    .my-item-loc { font-size: 11px; color: var(--muted); }
+    .btn-del-item {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: #ffebee; color: var(--danger);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+
+    /* Inbox / Messages Styles */
+    .msg-card {
+      background: var(--bg); border: 1px solid var(--line);
+      border-radius: 16px; padding: 12px 14px; margin-bottom: 10px;
+    }
+    .msg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .msg-client { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+    .msg-time { font-size: 10.5px; color: var(--muted); }
+    .msg-prop { font-size: 12px; font-weight: 600; color: var(--brand); margin-bottom: 6px; }
+    .msg-text { font-size: 12.5px; color: #333; margin-bottom: 8px; line-height: 1.4; }
+    .btn-reply-wa {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--whatsapp); color: #fff; text-decoration: none;
+      padding: 6px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+    }
+
+    .tabbar {
+      position: fixed; left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      z-index: 120; max-width: 460px; margin: 0 auto;
+      background: #fff; border-radius: 999px; padding: 8px;
+      display: flex; justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(20, 32, 30, 0.18);
+    }
+    .tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 4px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 500; color: var(--muted);
+    }
+    .tab svg { width: 22px; height: 22px; }
+    .tab.active { background: var(--brand); color: #fff; }
+
+    @media (min-width: 900px) {
+      body { padding-bottom: 40px; }
+      .tabbar { display: none; }
+      .desktop-links { display: flex; }
+      .dash-grid { grid-template-columns: 1.1fr 0.9fr; align-items: start; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="navbar">
+      <a href="index.html" class="brand">
+        <img src="dalali-avatar.jpg" alt="Logo" class="header-logo-img" onerror="this.src='https://via.placeholder.com/44?text=DF'">
+        <div class="logo-text">Dalali<span>Fasta</span></div>
+      </a>
+
+      <ul class="desktop-links">
+        <li><a href="index.html">Nyumbani</a></li>
+        <li><a href="videos.html">Video Reels</a></li>
+        <li><a href="map.html">Ramani</a></li>
+        <li><a href="dashboard.html" class="active">Dashibodi Yangu</a></li>
+      </ul>
+
+      <button class="btn-logout" onclick="logoutAgent()">Toka (Logout)</button>
+    </div>
+  </header>
+
+  <main class="main-container">
+
+    <!-- Profile Banner -->
+    <section class="profile-banner">
+      <div class="profile-left">
+        <label class="avatar-wrapper" title="Bonyeza kubadilisha picha yako">
+          <div class="agent-avatar-lg" id="agent-avatar-box">D</div>
+          <span class="edit-pic-badge">📷</span>
+          <input type="file" id="changeAvatarInput" accept="image/*" style="display:none;" onchange="updateAgentAvatar(this)">
+        </label>
+        <div>
+          <div style="font-size:12px; opacity:0.85;">Akaunti Binafsi ya Dalali</div>
+          <div class="agent-name-title" id="agent-name">Inapakia...</div>
+          <div class="agent-phone-sub" id="agent-phone">Simu: ...</div>
+        </div>
+      </div>
+
+      <div class="stats-wrapper">
+        <div class="stat-pill">
+          <div class="stat-num" id="my-props-count">0</div>
+          <div class="stat-lbl">Mali</div>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-num" id="my-reels-count">0</div>
+          <div class="stat-lbl">Video</div>
+        </div>
+        <div class="stat-pill">
+          <div class="stat-num" id="my-msgs-count">0</div>
+          <div class="stat-lbl">Jumbe</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="dash-grid">
+
+      <!-- Fomu ya Kuweka Tangazo -->
+      <div class="card">
+        <h2 class="card-title">+ Weka Tangazo Jipya</h2>
+
+        <div class="type-switcher">
+          <button type="button" class="switch-btn active" id="tab-prop" onclick="switchPostType('property')">🏠 Mali (Picha)</button>
+          <button type="button" class="switch-btn" id="tab-reel" onclick="switchPostType('reel')">🎥 Video Reel</button>
+        </div>
+
+        <form id="dalaliForm">
+          <div class="form-group">
+            <label class="form-label">Kichwa cha Tangazo</label>
+            <input type="text" id="title" class="form-control" placeholder="Mf: Nyumba ya kisasa Sinza" required>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group" id="category-group">
+              <label class="form-label">Aina ya Mali</label>
+              <select id="category" class="form-control">
+                <option value="Nyumba ya Kupanga">Nyumba ya Kupanga</option>
+                <option value="Nyumba Inauzwa">Nyumba Inauzwa</option>
+                <option value="Kiwanja">Kiwanja</option>
+                <option value="Fremu">Fremu</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Bei (TZS)</label>
+              <input type="number" id="price" class="form-control" placeholder="350000" required>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Eneo / Mahali (Location)</label>
+              <input type="text" id="location" class="form-control" placeholder="Sinza, Dar es Salaam" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Namba Yako ya Simu</label>
+              <input type="tel" id="phone" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Maelezo ya Ziada</label>
+            <textarea id="description" class="form-control" placeholder="Eleza sifa za mali..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" id="media-label">Chagua Picha ya Mali</label>
+            <label class="upload-box">
+              <div class="upload-text" id="file-name-display">📷 Bonyeza hapa kuchagua picha</div>
+              <input type="file" id="mediaFile" accept="image/*" style="display:none;" onchange="handleFileChange(this)" required>
+            </label>
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn-submit">Chapisha Tangazo Sasa</button>
+        </form>
+
+        <div id="form-status"></div>
+      </div>
+
+      <!-- Orodha ya Mali, Video, na Jumbe (Inbox) -->
+      <div class="card">
+        <h2 class="card-title">Usimamizi wa Akaunti Yako</h2>
+        
+        <!-- Jumbe za Wateja (Inbox) -->
+        <div style="font-size:13.5px; font-weight:700; color:var(--brand); margin-bottom:8px;">💬 Jumbe za Wateja (Inbox)</div>
+        <div class="my-items-list" id="my-messages-container" style="margin-bottom: 20px;">
+          <p style="text-align:center; color:var(--muted); font-size:12px;">Inapakia jumbe zako...</p>
+        </div>
+
+        <div style="font-size:13.5px; font-weight:700; color:var(--brand); margin-bottom:8px;">🏠 Mali Zako (Picha)</div>
+        <div class="my-items-list" id="my-listings-container" style="margin-bottom: 20px;">
+          <p style="text-align:center; color:var(--muted); font-size:12px;">Inapakia mali zako...</p>
+        </div>
+
+        <div style="font-size:13.5px; font-weight:700; color:var(--brand); margin-bottom:8px;">🎥 Video Zako (Reels)</div>
+        <div class="my-items-list" id="my-reels-container">
+          <p style="text-align:center; color:var(--muted); font-size:12px;">Inapakia video zako...</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <nav class="tabbar" aria-label="Menyu kuu">
+    <a href="index.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      Nyumbani
+    </a>
+    <a href="videos.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Video
+    </a>
+    <a href="map.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+      Ramani
+    </a>
+    <a href="dashboard.html" class="tab active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      Dashibodi
+    </a>
+  </nav>
+
+  <script>
+    const SUPABASE_URL = 'https://fwpzpihwxylnyejthnxq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3cHpwaWh3eHlsbnllanRobnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0ODE2ODAsImV4cCI6MjEwNzA1NzY4MH0.SMaJxy35YVHs4_Lj1C4v72V069CJEypvxsBhjC65h6I';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentAgent = JSON.parse(localStorage.getItem('dalali_user'));
+    let currentPostType = 'property';
+
+    function renderAgentProfile() {
+      if (!currentAgent) {
+        window.location.replace('login.html');
+        return;
+      }
+      document.getElementById('agent-name').innerText = currentAgent.full_name;
+      document.getElementById('agent-phone').innerText = '📞 ' + currentAgent.phone_number;
+      document.getElementById('phone').value = currentAgent.phone_number;
+
+      const avatarBox = document.getElementById('agent-avatar-box');
+      if (currentAgent.avatar_url) {
+        avatarBox.innerHTML = `<img src="${currentAgent.avatar_url}" alt="${currentAgent.full_name}">`;
+      } else {
+        avatarBox.innerText = currentAgent.full_name.charAt(0).toUpperCase();
+      }
+    }
+
+    async function updateAgentAvatar(input) {
+      if (!input.files || !input.files[0]) return;
+      const file = input.files[0];
+      const cleanName = `avatars/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+
+      const { error: upErr } = await supabaseClient.storage
+        .from('property-images')
+        .upload(cleanName, file, { upsert: true });
+
+      if (upErr) {
+        alert('Imeshindikana kupakia picha: ' + upErr.message);
+        return;
+      }
+
+      const { data: urlData } = supabaseClient.storage
+        .from('property-images')
+        .getPublicUrl(cleanName);
+
+      const newAvatarUrl = urlData.publicUrl;
+
+      const { data: updatedAgent, error: dbErr } = await supabaseClient
+        .from('agents')
+        .update({ avatar_url: newAvatarUrl })
+        .eq('id', currentAgent.id)
+        .select()
+        .single();
+
+      if (!dbErr && updatedAgent) {
+        currentAgent = updatedAgent;
+        localStorage.setItem('dalali_user', JSON.stringify(currentAgent));
+        renderAgentProfile();
+        alert('✅ Picha yako ya profile imebadilishwa kikamilifu!');
+      }
+    }
+
+    function logoutAgent() {
+      localStorage.removeItem('dalali_user');
+      window.location.replace('login.html');
+    }
+
+    function switchPostType(type) {
+      currentPostType = type;
+      document.getElementById('tab-prop').classList.toggle('active', type === 'property');
+      document.getElementById('tab-reel').classList.toggle('active', type === 'reel');
+      document.getElementById('category-group').style.display = type === 'property' ? 'block' : 'none';
+      const mediaInput = document.getElementById('mediaFile');
+      mediaInput.value = '';
+      mediaInput.accept = type === 'property' ? 'image/*' : 'video/*';
+      document.getElementById('media-label').innerText = type === 'property' ? 'Chagua Picha ya Mali' : 'Chagua Video Reel';
+      document.getElementById('file-name-display').innerText = type === 'property' ? '📷 Bonyeza hapa kuchagua picha' : '🎥 Bonyeza hapa kuchagua video';
+    }
+
+    function handleFileChange(input) {
+      if (input.files && input.files[0]) {
+        document.getElementById('file-name-display').innerText = '✅ ' + input.files[0].name;
+      }
+    }
+
+    document.getElementById('dalaliForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusBox = document.getElementById('form-status');
+      const submitBtn = document.getElementById('submitBtn');
+      const file = document.getElementById('mediaFile').files[0];
+
+      if (!file) return;
+
+      statusBox.className = 'status-loading';
+      statusBox.innerText = '⏳ Inapakia... Tafadhali subiri.';
+      submitBtn.disabled = true;
+
+      try {
+        const cleanName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const bucketName = currentPostType === 'reel' ? 'property-videos' : 'property-images';
+        const filePath = currentPostType === 'reel' ? cleanName : `properties/${cleanName}`;
+
+        const { error: uploadErr } = await supabaseClient.storage
+          .from(bucketName)
+          .upload(filePath, file, { upsert: true });
+
+        if (uploadErr) throw uploadErr;
+
+        const { data: urlData } = supabaseClient.storage
+          .from(bucketName)
+          .getPublicUrl(filePath);
+
+        const publicUrl = urlData.publicUrl;
+        const phoneVal = document.getElementById('phone').value.trim();
+
+        if (currentPostType === 'property') {
+          const { error: dbErr } = await supabaseClient.from('properties').insert([{
+            title: document.getElementById('title').value.trim(),
+            category: document.getElementById('category').value,
+            price: parseFloat(document.getElementById('price').value),
+            location: document.getElementById('location').value.trim(),
+            description: document.getElementById('description').value.trim(),
+            image_url: publicUrl,
+            agent_id: currentAgent.id,
+            agent_phone: phoneVal
+          }]);
+          if (dbErr) throw dbErr;
+        } else {
+          const { error: dbErr } = await supabaseClient.from('reels').insert([{
+            title: document.getElementById('title').value.trim(),
+            price: parseFloat(document.getElementById('price').value),
+            location: document.getElementById('location').value.trim(),
+            phone_number: phoneVal,
+            description: document.getElementById('description').value.trim(),
+            video_url: publicUrl,
+            agent_id: currentAgent.id
+          }]);
+          if (dbErr) throw dbErr;
+        }
+
+        statusBox.className = 'status-success';
+        statusBox.innerText = '🎉 Kimechapishwa kikamilifu sokoni!';
+        document.getElementById('dalaliForm').reset();
+        document.getElementById('phone').value = currentAgent.phone_number;
+        switchPostType(currentPostType);
+        loadDashboardData();
+
+      } catch (err) {
+        statusBox.className = 'status-error';
+        statusBox.innerText = '❌ Hitilafu: ' + err.message;
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    async function loadDashboardData() {
+      // 1. Pakia Jumbe (Inbox)
+      const msgContainer = document.getElementById('my-messages-container');
+      const { data: msgs } = await supabaseClient
+        .from('messages')
+        .select('*')
+        .eq('agent_id', currentAgent.id)
+        .order('created_at', { ascending: false });
+
+      document.getElementById('my-msgs-count').innerText = msgs ? msgs.length : 0;
+
+      if (!msgs || msgs.length === 0) {
+        msgContainer.innerHTML = `<p style="color:var(--muted); font-size:12px; text-align:center; padding:10px 0;">Bado hakuna ujumbe kutoka kwa wateja.</p>`;
+      } else {
+        msgContainer.innerHTML = msgs.map(m => {
+          let cleanPhone = String(m.client_phone || '').replace(/\D/g, '');
+          if (cleanPhone.startsWith('0')) cleanPhone = '255' + cleanPhone.substring(1);
+          const waText = encodeURIComponent(`Habari ${m.client_name}, nimepokea ujumbe wako kuhusu "${m.property_title}": ${m.message_text}`);
+          
+          return `
+            <div class="msg-card">
+              <div class="msg-header">
+                <span class="msg-client">👤 ${m.client_name} (${m.client_phone})</span>
+                <span class="msg-time">${new Date(m.created_at).toLocaleDateString()}</span>
+              </div>
+              <div class="msg-prop">🏠 ${m.property_title || 'Mali'}</div>
+              <div class="msg-text">"${m.message_text}"</div>
+              <a href="https://wa.me/${cleanPhone}?text=${waText}" target="_blank" class="btn-reply-wa">
+                💬 Jibu kupitia WhatsApp
+              </a>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Pakia Mali (Properties)
+      const propContainer = document.getElementById('my-listings-container');
+      const { data: props } = await supabaseClient
+        .from('properties')
+        .select('*')
+        .eq('agent_id', currentAgent.id)
+        .order('created_at', { ascending: false });
+
+      document.getElementById('my-props-count').innerText = props ? props.length : 0;
+
+      if (!props || props.length === 0) {
+        propContainer.innerHTML = `<p style="color:var(--muted); font-size:12px; text-align:center; padding:10px 0;">Bado hujaweka mali ya picha.</p>`;
+      } else {
+        propContainer.innerHTML = props.map(item => `
+          <div class="my-item-card">
+            <img src="${item.image_url || 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=200'}" class="my-item-thumb" alt="${item.title}">
+            <div class="my-item-info">
+              <span class="my-item-badge">${item.category}</span>
+              <div class="my-item-title">${item.title}</div>
+              <div class="my-item-price">Tsh ${Number(item.price).toLocaleString()}</div>
+              <div class="my-item-loc">📍 ${item.location}</div>
+            </div>
+            <button type="button" class="btn-del-item" onclick="deleteItem('properties', '${item.id}')" title="Futa">🗑️</button>
+          </div>
+        `).join('');
+      }
+
+      // 3. Pakia Video (Reels)
+      const reelContainer = document.getElementById('my-reels-container');
+      const { data: reels } = await supabaseClient
+        .from('reels')
+        .select('*')
+        .eq('agent_id', currentAgent.id)
+        .order('created_at', { ascending: false });
+
+      document.getElementById('my-reels-count').innerText = reels ? reels.length : 0;
+
+      if (!reels || reels.length === 0) {
+        reelContainer.innerHTML = `<p style="color:var(--muted); font-size:12px; text-align:center; padding:10px 0;">Bado hujaweka video ya reel.</p>`;
+      } else {
+        reelContainer.innerHTML = reels.map(item => `
+          <div class="my-item-card">
+            <video src="${item.video_url}" class="my-item-thumb" muted></video>
+            <div class="my-item-info">
+              <span class="my-item-badge">Video Reel</span>
+              <div class="my-item-title">${item.title}</div>
+              <div class="my-item-price">Tsh ${Number(item.price).toLocaleString()}</div>
+              <div class="my-item-loc">📍 ${item.location}</div>
+            </div>
+            <button type="button" class="btn-del-item" onclick="deleteItem('reels', '${item.id}')" title="Futa">🗑️</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    async function deleteItem(table, id) {
+      if (!confirm('Je, una uhakika unataka kufuta tangazo hili?')) return;
+      await supabaseClient.from(table).delete().eq('id', id).eq('agent_id', currentAgent.id);
+      loadDashboardData();
+    }
+
+    renderAgentProfile();
+    loadDashboardData();
+  </script>
+</body>
+</html>

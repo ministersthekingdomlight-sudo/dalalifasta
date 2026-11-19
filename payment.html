@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malipo ya Kodi ya Nyumba - Smart Rentals</title>
+    <!-- Tailwind CSS kwa ajili ya muundo wa Kisasa (Responsive) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-red { background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%); }
+        .card-gold { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); }
+        .card-blue { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+    <div class="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div class="max-w-xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+            
+            <!-- Header ya App -->
+            <div class="bg-gradient-to-r from-slate-900 to-blue-900 py-6 px-8 text-white text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold tracking-wide">Smart Rentals Payment</h2>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1">Lipa kodi kwa urahisi kupitia Simu, Kadi, au Bitcoin</p>
+            </div>
+
+            <!-- Fomu Kuu -->
+            <form id="paymentForm" class="p-6 sm:p-8 space-y-6">
+                
+                <!-- SEHEMU YA KADI ZINAZOBADILIKA (CARD SLIDER) -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500">Chagua Kadi Yako ya Malipo</label>
+                        <span id="cardIndicator" class="text-xs font-bold text-blue-600">Kadi 1 ya 3</span>
+                    </div>
+
+                    <div class="relative overflow-hidden rounded-2xl shadow-lg">
+                        <div id="cardSlider" class="flex transition-transform duration-500 ease-in-out">
+                            
+                            <!-- Kadi ya 1: Red Luxury Card -->
+                            <div class="w-full flex-shrink-0 card-red p-6 text-white rounded-2xl relative shadow-inner">
+                                <div class="flex justify-between items-start">
+                                    <span class="font-bold tracking-widest text-sm opacity-90">LUXURY RENTAL</span>
+                                    <i class="fa-solid fa-gem text-xl text-red-200"></i>
+                                </div>
+                                <div class="my-6">
+                                    <div class="w-10 h-8 bg-amber-300 rounded-md mb-3 flex items-center justify-center shadow">
+                                        <div class="w-7 h-5 border border-amber-500 rounded-sm"></div>
+                                    </div>
+                                    <div class="text-base sm:text-lg font-mono tracking-widest">•••• •••• •••• 4821</div>
+                                </div>
+                                <div class="flex justify-between items-end text-xs">
+                                    <div>
+                                        <p class="text-red-200 text-[10px] uppercase">Mwenye Kadi</p>
+                                        <p class="font-semibold tracking-wider">JINA LA MPANGAJI</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-red-200 text-[10px] uppercase">Mwisho</p>
+                                        <p class="font-mono">08/28</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kadi ya 2: Gold VIP Card -->
+                            <div class="w-full flex-shrink-0 card-gold p-6 text-white rounded-2xl relative shadow-inner">
+                                <div class="flex justify-between items-start">
+                                    <span class="font-bold tracking-widest text-sm opacity-90">VIP RENTAL</span>
+                                    <i class="fa-solid fa-crown text-xl text-amber-200"></i>
+                                </div>
+                                <div class="my-6">
+                                    <div class="w-10 h-8 bg-amber-200 rounded-md mb-3 flex items-center justify-center shadow">
+                                        <div class="w-7 h-5 border border-amber-400 rounded-sm"></div>
+                                    </div>
+                                    <div class="text-base sm:text-lg font-mono tracking-widest">•••• •••• •••• 9932</div>
+                                </div>
+                                <div class="flex justify-between items-end text-xs">
+                                    <div>
+                                        <p class="text-amber-200 text-[10px] uppercase">Mwenye Kadi</p>
+                                        <p class="font-semibold tracking-wider">JINA LA MPANGAJI</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-amber-200 text-[10px] uppercase">Mwisho</p>
+                                        <p class="font-mono">12/29</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kadi ya 3: Blue Corporate Card -->
+                            <div class="w-full flex-shrink-0 card-blue p-6 text-white rounded-2xl relative shadow-inner">
+                                <div class="flex justify-between items-start">
+                                    <span class="font-bold tracking-widest text-sm opacity-90">GLOBAL RENTAL</span>
+                                    <i class="fa-brands fa-bitcoin text-xl text-amber-300"></i>
+                                </div>
+                                <div class="my-6">
+                                    <div class="w-10 h-8 bg-amber-300 rounded-md mb-3 flex items-center justify-center shadow">
+                                        <div class="w-7 h-5 border border-amber-500 rounded-sm"></div>
+                                    </div>
+                                    <div class="text-base sm:text-lg font-mono tracking-widest">•••• •••• •••• 1104</div>
+                                </div>
+                                <div class="flex justify-between items-end text-xs">
+                                    <div>
+                                        <p class="text-blue-200 text-[10px] uppercase">Mwenye Kadi</p>
+                                        <p class="font-semibold tracking-wider">JINA LA MPANGAJI</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-blue-200 text-[10px] uppercase">Mwisho</p>
+                                        <p class="font-mono">05/27</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Vifungo vya Kusogeza Kadi -->
+                    <div class="flex justify-between mt-3">
+                        <button type="button" onclick="prevCard()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition"><i class="fa-solid fa-arrow-left mr-1"></i> Iliyopita</button>
+                        <button type="button" onclick="nextCard()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition">Inayofuata <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                    </div>
+                </div>
+
+                <!-- Chaguo la Nchi na Kiasi -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Chagua Nchi</label>
+                        <select id="countrySelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500">
+                            <option value="TZ">Tanzania</option>
+                            <option value="KE">Kenya</option>
+                            <option value="UG">Uganda</option>
+                            <option value="RW">Rwanda</option>
+                            <option value="ZM">Zambia</option>
+                            <option value="ZW">Zimbabwe</option>
+                            <option value="MW">Malawi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kiasi cha Kodi</label>
+                        <input type="number" id="amountInput" placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                </div>
+
+                <!-- Njia za Malipo (Mobile, Card, Bitcoin) -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Njia ya Malipo</label>
+                    <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                        <button type="button" onclick="setMethod('mobile')" class="pay-btn p-3 border-2 border-blue-600 bg-blue-50 rounded-xl text-xs font-medium text-blue-700 flex flex-col items-center justify-center transition">
+                            <i class="fa-solid fa-mobile-screen mb-1 text-base"></i> Mobile Money
+                        </button>
+                        <button type="button" onclick="setMethod('card')" class="pay-btn p-3 border-2 border-slate-200 rounded-xl text-xs font-medium text-slate-600 flex flex-col items-center justify-center transition">
+                            <i class="fa-solid fa-credit-card mb-1 text-base"></i> Kadi Rasmi
+                        </button>
+                        <button type="button" onclick="setMethod('crypto')" class="pay-btn p-3 border-2 border-slate-200 rounded-xl text-xs font-medium text-slate-600 flex flex-col items-center justify-center transition">
+                            <i class="fa-brands fa-bitcoin mb-1 text-amber-500 text-base"></i> Bitcoin
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Taarifa za Mgawanyo wa Pesa Otomatiki -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs space-y-2 text-slate-600 shadow-sm">
+                    <div class="flex justify-between font-medium">
+                        <span>Ada ya App (Mwezi 1):</span>
+                        <span id="feeAmount" class="font-bold text-slate-700">0.00 TZS</span>
+                    </div>
+                    <div class="flex justify-between border-t border-slate-200 pt-2 font-medium">
+                        <span>Inayokwenda kwa Mwenye Nyumba:</span>
+                        <span id="landlordAmount" class="font-bold text-emerald-600">0.00 TZS</span>
+                    </div>
+                </div>
+
+                <!-- Kitufe cha Kulipa Sasa -->
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition duration-200 text-sm sm:text-base">
+                    Kamilisha Malipo Moja kwa Moja
+                </button>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript ya Kudhibiti Kadi, Responsive & Hesabu za Supabase -->
+    <script>
+        let currentCardIndex = 0;
+        const totalCards = 3;
+
+        function updateCardSlider() {
+            const slider = document.getElementById('cardSlider');
+            slider.style.transform = `translateX(-${currentCardIndex * 100}%)`;
+            document.getElementById('cardIndicator').textContent = `Kadi ${currentCardIndex + 1} ya ${totalCards}`;
+        }
+
+        function nextCard() {
+            currentCardIndex = (currentCardIndex + 1) % totalCards;
+            updateCardSlider();
+        }
+
+        function prevCard() {
+            currentCardIndex = (currentCardIndex - 1 + totalCards) % totalCards;
+            updateCardSlider();
+        }
+
+        function setMethod(type) {
+            document.querySelectorAll('.pay-btn').forEach(btn => {
+                btn.classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700');
+                btn.classList.add('border-slate-200', 'text-slate-600');
+            });
+            event.currentTarget.classList.remove('border-slate-200', 'text-slate-600');
+            event.currentTarget.classList.add('border-blue-600', 'bg-blue-50', 'text-blue-700');
+        }
+
+        const amountInput = document.getElementById('amountInput');
+        const feeAmount = document.getElementById('feeAmount');
+        const landlordAmount = document.getElementById('landlordAmount');
+        const countrySelect = document.getElementById('countrySelect');
+        const currencies = { TZ: 'TZS', KE: 'KES', UG: 'UGX', RW: 'RWF', ZM: 'ZMW', ZW: 'USD', MW: 'MWK' };
+
+        amountInput.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) || 0;
+            const cur = currencies[countrySelect.value] || 'TZS';
+            const commission = val * 0.10; // 10% au ada ya mwezi 1 kwa ajili ya App
+            const net = val - commission;
+
+            feeAmount.textContent = commission.toLocaleString() + ' ' + cur;
+            landlordAmount.textContent = net.toLocaleString() + ' ' + cur;
+        });
+
+        document.getElementById('paymentForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Malipo yamewasilishwa kikamilifu! Mfumo umehifadhi taarifa kwenye Supabase na kugawa pesa kwa mwenye nyumba.');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0e8f80">
+  <title>DalaliFasta - Nyumba, Mali, Viwanja</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --brand: #0e8f80;
+      --brand-dark: #0a6b60;
+      --brand-soft: #e3f4f1;
+      --ink: #14201e;
+      --muted: #6b7a77;
+      --line: #e6ecea;
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --gold: #ffb300;
+      --radius: 24px;
+      --container-max: 1200px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', 'Segoe UI', Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+    :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+    /* Splash Screen */
+    #welcome-splash {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(160deg, var(--brand-dark), var(--brand));
+      color: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; text-align: center; padding: 24px;
+      transition: opacity .6s ease;
+    }
+    .splash-logo-img {
+      width: 104px; height: 104px; object-fit: contain;
+      background: #fff; padding: 12px; border-radius: 32px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.25);
+      margin-bottom: 18px;
+      animation: pop 1.4s ease-in-out infinite alternate;
+    }
+    @keyframes pop { to { transform: scale(1.07); } }
+    .splash-title { font-size: 26px; font-weight: 700; }
+    .splash-sub { font-size: 14px; opacity: .85; }
+
+    /* Header */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(244,247,246,.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(230,236,234,0.6);
+    }
+    .navbar {
+      max-width: var(--container-max); margin: 0 auto;
+      padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo-img { width: 44px; height: 44px; object-fit: contain; border-radius: 14px; background: #fff; }
+    .brand-hello { font-size: 12px; color: var(--muted); line-height: 1.2; }
+    .logo-text { font-size: 18px; font-weight: 700; line-height: 1.2; }
+    .logo-text span { color: var(--brand); }
+
+    .desktop-links {
+      display: none;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+    .desktop-links a {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .desktop-links a:hover, .desktop-links a.active {
+      color: var(--brand);
+    }
+    .desktop-links svg { width: 18px; height: 18px; }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-btn {
+      position: relative; width: 44px; height: 44px; border-radius: 50%;
+      background: #fff; color: var(--ink);
+      display: grid; place-items: center;
+      box-shadow: 0 2px 10px rgba(20,32,30,.07);
+    }
+    .icon-btn svg { width: 22px; height: 22px; }
+    .notif-badge {
+      position: absolute; top: 6px; right: 7px;
+      width: 11px; height: 11px; border-radius: 50%;
+      background: #e53935; border: 2px solid #fff;
+    }
+    .auth-btns { display: none; gap: 8px; }
+    .btn {
+      padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+    }
+    .btn-outline { border: 2px solid var(--brand); color: var(--brand); background: transparent; }
+    .btn-primary { background: var(--brand); color: #fff; }
+
+    /* Search */
+    .hero { max-width: var(--container-max); margin: 0 auto; padding: 14px 18px 0; }
+    .hero-title { font-size: clamp(24px, 3vw, 34px); font-weight: 700; line-height: 1.3; max-width: 600px; }
+    .hero-sub { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+    .search-box {
+      margin-top: 18px; max-width: 640px;
+      background: #fff; border-radius: 999px;
+      padding: 6px 6px 6px 20px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 6px 22px rgba(20,32,30,.08);
+    }
+    .search-input {
+      flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+      font: inherit; font-size: 14px; color: var(--ink); padding: 10px 0;
+    }
+    .btn-search {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--brand); color: #fff; display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .btn-search svg { width: 20px; height: 20px; }
+
+    /* Category pills */
+    .pills {
+      max-width: var(--container-max); margin: 18px auto 0; padding: 0 18px;
+      display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none;
+    }
+    .pills::-webkit-scrollbar { display: none; }
+    .pill {
+      flex-shrink: 0; padding: 10px 18px; border-radius: 999px;
+      background: #fff; color: var(--ink);
+      font-size: 13px; font-weight: 500;
+      box-shadow: 0 2px 8px rgba(20,32,30,.05);
+      transition: background .2s, color .2s;
+    }
+    .pill.active { background: var(--brand); color: #fff; }
+
+    /* Properties */
+    .properties-section { max-width: var(--container-max); margin: 26px auto 0; padding: 0 18px; }
+    .section-title { font-size: 18px; font-weight: 600; margin-bottom: 14px; }
+    .property-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+
+    .property-card {
+      background: var(--card); border-radius: var(--radius);
+      padding: 10px; box-shadow: 0 6px 22px rgba(20,32,30,.07);
+      transition: transform .2s ease;
+      display: flex; flex-direction: column;
+    }
+    .property-card:hover { transform: translateY(-4px); }
+    .property-img-wrapper {
+      position: relative; height: 220px; border-radius: 18px; overflow: hidden; background: #dfe8e6; display: block;
+    }
+    .property-img-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .property-img-wrapper::after {
+      content: ""; position: absolute; inset: 45% 0 0 0;
+      background: linear-gradient(to top, rgba(0,0,0,.6), transparent);
+    }
+    .category-badge {
+      position: absolute; top: 12px; left: 12px; z-index: 1;
+      background: rgba(255,255,255,.92); color: var(--brand-dark);
+      padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    }
+    .img-info {
+      position: absolute; left: 14px; right: 14px; bottom: 12px; z-index: 1; color: #fff;
+    }
+    .img-info .property-title {
+      font-size: 17px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .property-location { font-size: 12px; opacity: .9; display: flex; align-items: center; gap: 4px; }
+    .property-location svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .property-details { padding: 12px 8px 6px; display: flex; flex-direction: column; flex: 1; }
+    .price-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .property-price { font-size: 19px; font-weight: 700; color: var(--brand-dark); }
+    
+    .go-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--brand); color: #fff; display: grid; place-items: center;
+      flex-shrink: 0; transition: transform 0.2s, background 0.2s; cursor: pointer;
+    }
+    .go-btn:hover { background: var(--brand-dark); transform: scale(1.08); }
+    .go-btn svg { width: 18px; height: 18px; pointer-events: none; }
+
+    .property-desc {
+      font-size: 12.5px; color: var(--muted); margin-top: 8px; line-height: 1.55;
+      display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .card-agent-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line);
+    }
+    .card-agent-avatar {
+      width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+      background: var(--brand); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 600; flex-shrink: 0; overflow: hidden;
+    }
+    .card-agent-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .card-agent-info { font-size: 11.5px; color: var(--muted); min-width: 0; }
+    .card-agent-name {
+      font-weight: 600; font-size: 13px; color: var(--ink);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Bottom tab bar */
+    .tabbar {
+      position: fixed; left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      z-index: 120; max-width: 460px; margin: 0 auto;
+      background: #fff; border-radius: 999px; padding: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 10px 30px rgba(20,32,30,.18);
+    }
+    .tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 4px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 500; color: var(--muted); text-decoration: none;
+    }
+    .tab svg { width: 22px; height: 22px; }
+    .tab.active { background: var(--brand); color: #fff; }
+
+    /* Toast */
+    .toast {
+      position: fixed; left: 50%; top: 18px; transform: translate(-50%, -150%);
+      z-index: 10000; width: min(92%, 420px);
+      background: #fff; border-radius: 18px; padding: 14px 16px;
+      box-shadow: 0 14px 40px rgba(20,32,30,.25);
+      border-left: 5px solid var(--brand);
+      transition: transform .35s ease;
+    }
+    .toast.show { transform: translate(-50%, 0); }
+    .toast-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .toast-title { font-weight: 600; font-size: 14px; }
+    .toast-close { background: none; font-size: 18px; color: var(--muted); padding: 0 4px; }
+    .toast-msg { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* Advanced Live Chat Widget Styles */
+    .chat-widget-btn {
+      position: fixed; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); right: 20px;
+      z-index: 999; width: 56px; height: 56px; border-radius: 50%;
+      background: var(--brand); color: #fff; display: grid; place-items: center;
+      box-shadow: 0 8px 24px rgba(14, 143, 128, 0.35); cursor: pointer;
+      transition: transform 0.3s ease, background 0.2s;
+    }
+    .chat-widget-btn:hover { transform: scale(1.08); background: var(--brand-dark); }
+    .chat-widget-btn svg { width: 26px; height: 26px; }
+
+    .chat-window {
+      position: fixed; bottom: calc(156px + env(safe-area-inset-bottom, 0px)); right: 20px;
+      z-index: 1000; width: min(92vw, 380px); height: 500px; background: #fff;
+      border-radius: var(--radius); box-shadow: 0 16px 40px rgba(20, 32, 30, 0.2);
+      display: flex; flex-direction: column; overflow: hidden;
+      transform: scale(0); transform-origin: bottom right; opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    }
+    .chat-window.open { transform: scale(1); opacity: 1; }
+    
+    .chat-header {
+      background: var(--brand); color: #fff; padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .chat-header-info { display: flex; align-items: center; gap: 10px; }
+    .chat-avatar { width: 36px; height: 36px; border-radius: 50%; background: #fff; color: var(--brand); display: grid; place-items: center; font-weight: 700; font-size: 14px; object-fit: cover; }
+    .chat-title { font-size: 15px; font-weight: 600; line-height: 1.2; }
+    .chat-subtitle { font-size: 11px; opacity: 0.85; }
+    .chat-close, .chat-back { background: none; color: #fff; font-size: 18px; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; }
+
+    .chat-view { display: none; flex: 1; flex-direction: column; overflow: hidden; background: #f9fbfb; }
+    .chat-view.active { display: flex; }
+    
+    .agents-list-container { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .chat-agent-item {
+      background: #fff; padding: 10px 12px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer; transition: background 0.2s;
+    }
+    .chat-agent-item:hover { background: var(--brand-soft); }
+    .chat-agent-meta { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .chat-agent-img { width: 40px; height: 40px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; flex-shrink: 0; overflow: hidden; }
+    .chat-agent-img img { width: 100%; height: 100%; object-fit: cover; }
+    .chat-agent-details { min-width: 0; }
+    .chat-agent-fullname { font-size: 13.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-agent-phone { font-size: 11.5px; color: var(--muted); }
+    .start-chat-pill { background: var(--brand-soft); color: var(--brand-dark); font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; flex-shrink: 0; }
+
+    .messages-container { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 13px; line-height: 1.4; word-break: break-word; }
+    .chat-msg.incoming { background: #fff; color: var(--ink); align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    .chat-msg.outgoing { background: var(--brand); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+    .chat-footer { padding: 10px 14px; background: #fff; border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+    .chat-input { flex: 1; border: 1px solid var(--line); border-radius: 999px; padding: 10px 16px; font: inherit; font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .chat-input:focus { border-color: var(--brand); }
+    .chat-send-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; flex-shrink: 0; cursor: pointer; }
+    .chat-send-btn svg { width: 16px; height: 16px; }
+
+    @media (min-width: 640px) {
+      .property-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 900px) {
+      body { padding-bottom: 40px; }
+      .tabbar { display: none; }
+      .desktop-links { display: flex; }
+      .auth-btns { display: flex; }
+      .property-grid { grid-template-columns: repeat(3, 1fr); gap: 22px; }
+      .chat-widget-btn { bottom: 30px; right: 30px; }
+      .chat-window { bottom: 100px; right: 30px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Splash Screen inayoonekana mara moja tu kwa kikao -->
+  <div id="welcome-splash">
+    <img src="download (9).jfif" alt="Logo" class="splash-logo-img" onerror="this.src='https://via.placeholder.com/100?text=Logo'">
+    <div class="splash-title">Dalali Fasta</div>
+    <div class="splash-sub">Pata nyumba, viwanja na fremu kwa urahisi</div>
+  </div>
+
+  <header>
+    <div class="navbar">
+      <a href="index.html" class="brand">
+        <img src="download (9).jfif" alt="Logo" class="header-logo-img" onerror="this.src='https://via.placeholder.com/44?text=Logo'">
+        <div>
+          <div class="brand-hello">Karibu tena</div>
+          <div class="logo-text">Dalali<span>Fasta</span></div>
+        </div>
+      </a>
+
+      <ul class="desktop-links">
+        <li>
+          <a href="index.html" class="active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+            Nyumbani
+          </a>
+        </li>
+        <li>
+          <a href="videos.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Video Reels
+          </a>
+        </li>
+        <li>
+          <a href="map.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            Ramani
+          </a>
+        </li>
+      </ul>
+
+      <div class="header-actions">
+        <div class="auth-btns">
+          <a href="login.html" class="btn btn-outline">Ingia</a>
+          <a href="register.html" class="btn btn-primary">Jisajili</a>
+        </div>
+        <button class="icon-btn" onclick="showLatestNotification()" aria-label="Arifa kutoka Admin" title="Arifa kutoka Admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span id="notif-count" class="notif-badge" style="display:none;"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1 class="hero-title">Pata au uuze nyumba, mali na viwanja kwa haraka</h1>
+      <p class="hero-sub">Chagua aina ya mali, kisha tafuta kwa eneo.</p>
+      <form class="search-box" onsubmit="event.preventDefault(); fetchProperties();" role="search">
+        <input type="text" id="search-location" class="search-input" placeholder="Tafuta eneo (mfano: Sinza)" aria-label="Eneo">
+        <button type="submit" class="btn-search" aria-label="Tafuta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        </button>
+      </form>
+    </section>
+
+    <nav class="pills" id="pills" aria-label="Aina ya mali">
+      <button type="button" class="pill active" data-cat="">Zote</button>
+      <button type="button" class="pill" data-cat="Nyumba ya Kupanga">Nyumba ya Kupanga</button>
+      <button type="button" class="pill" data-cat="Nyumba Inauzwa">Nyumba Inauzwa</button>
+      <button type="button" class="pill" data-cat="Kiwanja">Viwanja</button>
+      <button type="button" class="pill" data-cat="Fremu">Fremu</button>
+    </nav>
+
+    <section class="properties-section">
+      <h2 class="section-title">Mali zilizopo</h2>
+      <div id="property-list" class="property-grid">
+        <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Menyu kuu">
+    <a href="index.html" class="tab active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      Nyumbani
+    </a>
+    <a href="map.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+      Ramani
+    </a>
+    <a href="login.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>
+      Ingia
+    </a>
+    <a href="register.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      Jisajili
+    </a>
+    <a href="videos.html" class="btn-action" style="background:#222; color:#fff; padding:8px 12px; border-radius:999px; font-size:11px; display:flex; align-items:center; gap:4px; text-decoration:none;" title="Angalia Video">📹 Video</a>
+  </nav>
+
+  <!-- Advanced Live Chat Widget Elements -->
+  <button type="button" class="chat-widget-btn" onclick="toggleChatWindow()" aria-label="Fungua mazungumzo" title="Chagua Dalali na Uchati Naye">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+
+  <div id="chat-window" class="chat-window" role="dialog" aria-label="Dirisha la mazungumzo">
+    
+    <!-- Sehemu ya 1: Orodha ya Madalali (Agent Selector View) -->
+    <div id="chat-view-list" class="chat-view active">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar">DF</div>
+          <div>
+            <div class="chat-title">Chagua Dalali wa Kuchati Naye</div>
+            <div class="chat-subtitle">Gusa dalali yeyote kuanza mazungumzo</div>
+          </div>
+        </div>
+        <button type="button" class="chat-close" onclick="toggleChatWindow()" aria-label="Funga">&times;</button>
+      </div>
+      <div id="agents-list-container" class="agents-list-container">
+        <div style="text-align:center; color:var(--muted); padding:20px; font-size:13px;">Inapakia madalali...</div>
+      </div>
+    </div>
+
+    <!-- Sehemu ya 2: Dirisha la Chat na Dalali Maalum (Active Chat View) -->
+    <div id="chat-view-room" class="chat-view">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <button type="button" class="chat-back" onclick="backToAgentsList()" title="Rudi kwenye orodha ya madalali">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <div id="active-agent-avatar" class="chat-avatar">D</div>
+          <div>
+            <div id="active-agent-name" class="chat-title">Dalali</div>
+            <div class="chat-subtitle">Mtandaoni</div>
+          </div>
+        </div>
+        <button type="button" class="chat-close" onclick="toggleChatWindow()" aria-label="Funga">&times;</button>
+      </div>
+
+      <div id="chat-body" class="messages-container">
+        <div class="chat-msg incoming">Habari! Karibu sana kwenye huduma zangu. Unatafuta mali ya aina gani au unahitaji msaada gani?</div>
+      </div>
+
+      <form class="chat-footer" onsubmit="sendChatMessage(event)">
+        <input type="text" id="chat-input" class="chat-input" placeholder="Andika ujumbe wako hapa..." autocomplete="off" required>
+        <button type="submit" class="chat-send-btn" aria-label="Tuma">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <div class="toast-header">
+      <div class="toast-title" id="toast-title"></div>
+      <button type="button" class="toast-close" onclick="document.getElementById('toast').classList.remove('show')">&times;</button>
+    </div>
+    <div class="toast-msg" id="toast-msg"></div>
+  </div>
+
+  <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+  <script>
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('welcome-splash');
+      if (splash) {
+        if (sessionStorage.getItem('splash_shown')) {
+          splash.style.display = 'none';
+        } else {
+          setTimeout(() => {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+              splash.style.display = 'none';
+              sessionStorage.setItem('splash_shown', 'true');
+            }, 600);
+          }, 2200);
+        }
+      }
+    });
+
+    const SUPABASE_URL = 'https://fwpzpihwxylnyejthnxq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3cHpwaWh3eHlsbnllanRobnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0ODE2ODAsImV4cCI6MjEwNzA1NzY4MH0.SMaJxy35YVHs4_Lj1C4v72V069CJEypvxsBhjC65h6I';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let latestNotification = null;
+    let activeCategory = '';
+    let playedSoundIds = [];
+    let currentSelectedAgent = null;
+    let chatInterval = null;
+
+    try { playedSoundIds = JSON.parse(localStorage.getItem('played_sound_ids')) || []; } catch (e) {}
+
+    const FALLBACK_IMG = 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600';
+    const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+    const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function setActivePill(cat) {
+      document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.cat === cat));
+    }
+
+    document.getElementById('pills').addEventListener('click', e => {
+      const pill = e.target.closest('.pill');
+      if (pill) filterByCategory(pill.dataset.cat);
+    });
+
+    async function fetchProperties() {
+      const location = document.getElementById('search-location').value.trim();
+      const container = document.getElementById('property-list');
+
+      container.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+
+      let query = supabaseClient
+        .from('properties')
+        .select('*, agents:agent_id (id, full_name, phone_number, avatar_url)')
+        .order('created_at', { ascending: false });
+
+      if (activeCategory) query = query.eq('category', activeCategory);
+      if (location) query = query.ilike('location', `%${location}%`);
+
+      let { data, error } = await query;
+
+      if (error) {
+        let fallbackQuery = supabaseClient
+          .from('properties')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (activeCategory) fallbackQuery = fallbackQuery.eq('category', activeCategory);
+        if (location) fallbackQuery = fallbackQuery.ilike('location', `%${location}%`);
+
+        const fallbackRes = await fallbackQuery;
+        data = fallbackRes.data;
+        error = fallbackRes.error;
+      }
+
+      if (error) {
+        container.innerHTML = `<div class="status-msg error">Imeshindwa kupakia mali: ${esc(error.message)}</div>`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div class="status-msg">Hakuna mali iliyopatikana. Jaribu eneo au aina nyingine.</div>';
+        return;
+      }
+
+      container.innerHTML = data.map(item => {
+        const agent = item.agents || {};
+        const agentId = agent.id || item.agent_id || '';
+        const agentName = agent.full_name || 'Dalali';
+        const agentPhone = agent.phone_number || 'Haijawekwa';
+        const avatarHtml = agent.avatar_url
+          ? `<img src="${esc(agent.avatar_url)}" alt="${esc(agentName)}">`
+          : esc(agentName.charAt(0).toUpperCase());
+
+        const imgUrl = item.image_url || (Array.isArray(item.images) && item.images[0]) || FALLBACK_IMG;
+        const locText = item.location || item.location_area || item.location_region || 'Tanzania';
+
+        const clickAction = agentId ? `window.location.href='agent-details.html?id=${encodeURIComponent(agentId)}'` : `alert('Samahani, kitambulisho cha dalali hakipatikani.')`;
+
+        return `
+          <div class="property-card">
+            <a href="property-details.html?id=${encodeURIComponent(item.id)}" class="property-img-wrapper" aria-label="${esc(item.title)}">
+              <span class="category-badge">${esc(item.category || 'Nyumba')}</span>
+              <img src="${esc(imgUrl)}" alt="${esc(item.title)}" loading="lazy" onerror="this.src='${FALLBACK_IMG}'">
+              <div class="img-info">
+                <div class="property-title">${esc(item.title)}</div>
+                <div class="property-location">${PIN}${esc(locText)}</div>
+              </div>
+            </a>
+            <div class="property-details">
+              <div class="price-row">
+                <div class="property-price">Tsh ${Number(item.price || 0).toLocaleString()}</div>
+                <button type="button" class="go-btn" onclick="${clickAction}" title="Angalia wasifu wa ${esc(agentName)}" aria-label="Angalia wasifu wa dalali">${ARROW}</button>
+              </div>
+              <div class="property-desc">${esc(item.description || 'Hakuna maelezo ya ziada.')}</div>
+              <div class="card-agent-row">
+                <div class="card-agent-avatar">${avatarHtml}</div>
+                <div class="card-agent-info">
+                  <div class="card-agent-name">${esc(agentName)}</div>
+                  <div>${esc(agentPhone)}</div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function showToast(title, msg) {
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-msg').textContent = msg;
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => t.classList.remove('show'), 6000);
+    }
+
+    async function checkForLatestNotification() {
+      try {
+        const { data } = await supabaseClient
+          .from('notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0) {
+          latestNotification = data[0];
+          const badge = document.getElementById('notif-count');
+
+          if (!latestNotification.is_read) {
+            badge.style.display = 'block';
+            if (!playedSoundIds.includes(latestNotification.id)) {
+              const sound = document.getElementById('notif-sound');
+              if (sound) sound.play().catch(e => console.log('Audio play blocked:', e));
+              playedSoundIds.push(latestNotification.id);
+              try { localStorage.setItem('played_sound_ids', JSON.stringify(playedSoundIds)); } catch (e) {}
+            }
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        console.error('Hitilafu ya arifa:', err);
+      }
+    }
+
+    async function showLatestNotification() {
+      if (!latestNotification) {
+        showToast('Arifa', 'Hakuna arifa mpya kutoka kwa Dalali Fasta kwa sasa.');
+        return;
+      }
+      await supabaseClient.from('notifications').update({ is_read: true }).eq('id', latestNotification.id);
+      document.getElementById('notif-count').style.display = 'none';
+      showToast(latestNotification.title, latestNotification.message);
+    }
+
+    function filterByCategory(cat) {
+      activeCategory = cat;
+      setActivePill(cat);
+      fetchProperties();
+    }
+
+    // --- UDHIBITI WA CHAT NA MADALALI (LIVE CHAT WIDGET) ---
+    async function toggleChatWindow() {
+      const win = document.getElementById('chat-window');
+      const isOpen = win.classList.toggle('open');
+      if (isOpen) {
+        await loadAgentsForChat();
+      } else {
+        stopChatPolling();
+      }
+    }
+
+    async function loadAgentsList() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('agents')
+          .select('id, full_name, phone_number, avatar_url')
+          .limit(20);
+
+        if (error || !data || data.length === 0) {
+          const { data: propData } = await supabaseClient.from('properties').select('agents:agent_id (id, full_name, phone_number, avatar_url)');
+          if (propData) {
+            const uniqueAgents = [];
+            const ids = new Set();
+            propData.forEach(p => {
+              if (p.agents && p.agents.id && !ids.has(p.agents.id)) {
+                ids.add(p.agents.id);
+                uniqueAgents.push(p.agents);
+              }
+            });
+            return uniqueAgents;
+          }
+          return [];
+        }
+        return data;
+      } catch (err) {
+        console.error('Hitilafu ya kupakia madalali:', err);
+        return [];
+      }
+    }
+
+    async function loadAgentsForChat() {
+      const container = document.getElementById('agents-list-container');
+      container.innerHTML = '<div style="text-align:center; color:var(--muted); padding:20px; font-size:13px;">Inapakia madalali waliopo...</div>';
+
+      const agents = await loadAgentsList();
+
+      if (!agents || agents.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:var(--muted); padding:20px; font-size:13px;">Hakuna madalali waliopatikana kwa sasa.</div>';
+        return;
+      }
+
+      container.innerHTML = agents.map(agent => {
+        const name = agent.full_name || 'Dalali';
+        const phone = agent.phone_number || 'Namba haijawekwa';
+        const avatarHtml = agent.avatar_url
+          ? `<img src="${esc(agent.avatar_url)}" alt="${esc(name)}">`
+          : esc(name.charAt(0).toUpperCase());
+
+        return `
+          <div class="chat-agent-item" onclick="startChatWithAgent('${esc(agent.id)}', '${esc(name)}', '${esc(agent.avatar_url || '')}')">
+            <div class="chat-agent-meta">
+              <div class="chat-agent-img">${avatarHtml}</div>
+              <div class="chat-agent-details">
+                <div class="chat-agent-fullname">${esc(name)}</div>
+                <div class="chat-agent-phone">${esc(phone)}</div>
+              </div>
+            </div>
+            <div class="start-chat-pill">Chati</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function startChatWithAgent(id, name, avatarUrl) {
+      currentSelectedAgent = { id, name, avatarUrl };
+      
+      document.getElementById('chat-view-list').classList.remove('active');
+      document.getElementById('chat-view-room').classList.add('active');
+
+      document.getElementById('active-agent-name').textContent = name;
+      const avatarEl = document.getElementById('active-agent-avatar');
+      if (avatarUrl) {
+        avatarEl.innerHTML = `<img src="${esc(avatarUrl)}" alt="${esc(name)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+      } else {
+        avatarEl.textContent = name.charAt(0).toUpperCase();
+      }
+
+      await fetchChatMessages();
+      startChatPolling();
+    }
+
+    function backToAgentsList() {
+      stopChatPolling();
+      document.getElementById('chat-view-room').classList.remove('active');
+      document.getElementById('chat-view-list').classList.add('active');
+    }
+
+    function scrollToBottom() {
+      const body = document.getElementById('chat-body');
+      body.scrollTop = body.scrollHeight;
+    }
+
+    async function fetchChatMessages() {
+      if (!currentSelectedAgent) return;
+      try {
+        const { data, error } = await supabaseClient
+          .from('messages')
+          .select('*')
+          .eq('agent_id', currentSelectedAgent.id)
+          .order('created_at', { ascending: true });
+
+        if (!error && data) {
+          const body = document.getElementById('chat-body');
+          if (data.length === 0) {
+            body.innerHTML = `<div class="chat-msg incoming">Habari! Mimi ni ${esc(currentSelectedAgent.name)}. Karibu tuchati hapa.</div>`;
+          } else {
+            body.innerHTML = data.map(m => {
+              const isAgent = m.sender_type === 'agent';
+              const msgClass = isAgent ? 'chat-msg incoming' : 'chat-msg outgoing';
+              return `<div class="${msgClass}">${esc(m.message_text)}</div>`;
+            }).join('');
+          }
+          scrollToBottom();
+        }
+      } catch (err) {
+        console.error('Hitilafu ya kupakia jumbe:', err);
+      }
+    }
+
+    function startChatPolling() {
+      stopChatPolling();
+      chatInterval = setInterval(fetchChatMessages, 4000); // Kufanya refresh ya ujumbe kila sekunde 4
+    }
+
+    function stopChatPolling() {
+      if (chatInterval) {
+        clearInterval(chatInterval);
+        chatInterval = null;
+      }
+    }
+
+    async function sendChatMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text || !currentSelectedAgent) return;
+
+      input.value = '';
+
+      try {
+        const { error } = await supabaseClient.from('messages').insert([
+          {
+            agent_id: currentSelectedAgent.id,
+            client_name: 'Mteja wa Tovuti',
+            client_phone: 'Haijawekwa',
+            property_title: 'Mazungumzo ya Moja kwa Moja',
+            message_text: text,
+            sender_type: 'client' // Imehifadhiwa kama imetumwa na mteja
+          }
+        ]);
+
+        if (!error) {
+          await fetchChatMessages();
+        } else {
+          console.error('Hitilafu ya kuhifadhi ujumbe:', error.message);
+        }
+      } catch (err) {
+        console.error('Hitilafu ya mtandao:', err);
+      }
+    }
+
+    fetchProperties();
+    checkForLatestNotification();
+    setInterval(checkForLatestNotification, 15000);
+  </script>
+</body>
+</html>

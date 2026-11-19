@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquid Glass 3D Dashboard - DalaliFasta</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    
+    body { 
+      background: #0b0f19; 
+      color: #f8fafc; 
+      min-height: 100vh; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      padding: 20px;
+    }
+
+    /* CONTAINER KUU YA LIQUID GLASS (3D GLASSMORPHISM CARD) */
+    .dashboard-app {
+      width: 100%;
+      max-width: 1100px;
+      background: rgba(18, 24, 38, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+      padding: 28px;
+      position: relative;
+    }
+
+    /* HEADER & BANGO LA KISASA */
+    .top-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      object-fit: contain;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .brand-text {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8 0%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-profile-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 14px 6px 6px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .avatar-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #38bdf8;
+      color: #0b0f19;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+
+    /* GRID LAYOUT (Picha ya 1 & Picha ya 2 Style) */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 2.2fr 1fr;
+      gap: 24px;
+    }
+
+    /* LIQUID COLOR STAT CARDS (KUTOKA PICHA YA 1 & 2) */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card-3d {
+      padding: 20px;
+      border-radius: 22px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .stat-card-3d:hover {
+      transform: translateY(-3px);
+    }
+
+    /* Kadi ya Njano (Progress) */
+    .card-yellow {
+      background: linear-gradient(135deg, #fde047 0%, #eab308 100%);
+      color: #1e293b;
+    }
+
+    /* Kadi ya Chungwa (Time) */
+    .card-orange {
+      background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+      color: #ffffff;
+    }
+
+    /* Kadi ya Buluu yenye Mwangaza (Neon Glow Wallet) */
+    .card-neon-blue {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+      border: 1.5px solid #38bdf8;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.3), inset 0 0 15px rgba(56, 189, 248, 0.2);
+    }
+
+    .stat-val {
+      font-size: 28px;
+      font-weight: 800;
+      margin: 8px 0 4px 0;
+    }
+
+    /* FORM & PANELS WITH GLASS EFFECT */
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 22px;
+      border-radius: 24px;
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 6px; }
+
+    .glass-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      color: #ffffff;
+      outline: none;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    .glass-input:focus {
+      border-color: #c084fc;
+      box-shadow: 0 0 15px rgba(192, 132, 252, 0.3);
+    }
+
+    /* VITUFE VYA GLOWING 3D */
+    .btn-liquid-3d {
+      width: 100%;
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      color: #0b0f19;
+      border: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+      transition: all 0.25s ease;
+    }
+
+    .btn-liquid-3d:hover {
+      box-shadow: 0 12px 28px rgba(56, 189, 248, 0.6), 0 0 20px rgba(192, 132, 252, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .btn-withdraw {
+      background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+    }
+
+    /* LIST YA NYUMBA (CARDS WITH EMOJIS & AVATARS) */
+    .property-card-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .property-thumb {
+      width: 65px;
+      height: 65px;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+
+    .btn-delete-sm {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-delete-sm:hover {
+      background: #ef4444;
+      color: white;
+    }
+
+    /* RESPONSIVE DESIGN (SIMU NA PC) */
+    @media (max-width: 850px) {
+      body { padding: 8px; }
+      .dashboard-app { padding: 18px; border-radius: 20px; }
+      .dashboard-layout { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+      .top-navbar { flex-direction: column; gap: 12px; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-app">
+    
+    <!-- TOP NAVIGATION BAR -->
+    <div class="top-navbar">
+      <div class="brand-group">
+        <img src="download (9).jfif" alt="Logo" class="brand-logo-img" onerror="this.src='https://via.placeholder.com/44?text=DF'">
+        <div>
+          <div class="brand-text">DalaliFasta ⚡ Pro</div>
+          <div style="font-size: 11px; color: #94a3b8;">Liquid Glass Dashboard</div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="user-profile-badge">
+          <div class="avatar-circle" id="user-avatar-initial">D</div>
+          <span style="font-size: 13px; font-weight: 700;" id="agent-display-name">Inapakia...</span>
+        </div>
+        <button class="btn-delete-sm" style="padding: 8px 14px;" onclick="logout()">🚪 Toka</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD MAIN LAYOUT -->
+    <div class="dashboard-layout">
+      
+      <!-- UPANDE WA KUSHOTO / KATI -->
+      <div>
+        
+        <!-- CARDS ZA STATS & WALLET (STYLE YA PICHA YA 1 & 2) -->
+        <div class="stats-row">
+          
+          <!-- Salio Halisi (Neon Blue Card) -->
+          <div class="stat-card-3d card-neon-blue">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 12px; color: #38bdf8; font-weight: 700;">💰 Salio Lako Halisi (Admin Wallet)</div>
+                <div class="stat-val" id="wallet-balance-text" style="color: #ffffff;">TZS 0</div>
+              </div>
+              <button class="btn-withdraw" onclick="openWithdrawModal()">💸 Toa Pesa</button>
+            </div>
+          </div>
+
+          <!-- Kadi ya Yellow (Progress/Nyumba) -->
+          <div class="stat-card-3d card-yellow">
+            <div style="font-size: 12px; font-weight: 800; opacity: 0.8;">📊 NYUMBA SOKONI</div>
+            <div class="stat-val" id="total-properties-count">0</div>
+            <div style="font-size: 11px; font-weight: 600;">Za kwako ulizopost</div>
+          </div>
+
+          <!-- Kadi ya Orange (Pro Member Status) -->
+          <div class="stat-card-3d card-orange">
+            <div style="font-size: 12px; font-weight: 800; opacity: 0.9;">🚀 AKAUNTI STATUS</div>
+            <div class="stat-val" style="font-size: 20px; margin-top: 12px;" id="pro-badge-text">FREE</div>
+            <div style="font-size: 11px; opacity: 0.9;" id="pro-sub-text">Boresha kuwa PRO TZS 30,000</div>
+          </div>
+
+        </div>
+
+        <!-- FOMU YA POST NYUMBA -->
+        <div class="glass-panel">
+          <div class="panel-title">🏠 Post Nyumba au Mali Mpya Sokoni</div>
+          
+          <form id="add-property-form" onsubmit="handlePostProperty(event)">
+            <div class="form-group">
+              <label>Kichwa cha Tangazo (Title)</label>
+              <input type="text" id="p-title" class="glass-input" placeholder="Mfano: Nyumba ya Vyumba 3 inauzwa" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+              <div class="form-group">
+                <label>Aina ya Tangazo</label>
+                <select id="p-category" class="glass-input" required style="color: white; background: #0f172a;">
+                  <option value="Nyumba ya Kupanga">Nyumba ya Kupanga</option>
+                  <option value="Nyumba Inauzwa">Nyumba Inauzwa</option>
+                  <option value="Kiwanja">Kiwanja</option>
+                  <option value="Fremu">Fremu</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Bei (TZS)</label>
+                <input type="number" id="p-price" class="glass-input" placeholder="350000" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Eneo (Location)</label>
+              <input type="text" id="p-location" class="glass-input" placeholder="Sinza, Dar es Salaam" required>
+            </div>
+
+            <div class="form-group">
+              <label>Picha ya Nyumba</label>
+              <input type="file" id="p-image" accept="image/*" class="glass-input" required>
+            </div>
+
+            <button type="submit" class="btn-liquid-3d" id="submit-btn">Post Nyumba Sokoni</button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- UPANDE WA KULIA (ORODHA YA NYUMBA & MALIPO) -->
+      <div>
+        
+        <!-- ORODHA YA NYUMBA ZANGU -->
+        <div class="glass-panel">
+          <div class="panel-title">📋 Nyumba Zako Sokoni</div>
+          <div id="my-properties-list">
+            <p style="font-size: 12px; color: #94a3b8;">Inapakia nyumba zako...</p>
+          </div>
+        </div>
+
+        <!-- UPGRADE PRO CARD -->
+        <div class="glass-panel" style="background: linear-gradient(135deg, rgba(192, 132, 252, 0.15) 0%, rgba(56, 189, 248, 0.15) 100%); border-color: rgba(192, 132, 252, 0.3);">
+          <div class="panel-title" style="color: #c084fc;">⚡ Upgrade to Pro</div>
+          <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 12px;">Pata uwezo wa kutangaza nyumba bila kikomo na kupata wateja wengi zaidi.</p>
+          <button class="btn-liquid-3d" style="background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); color: white;" onclick="upgradeToPro()">Pata Pro TZS 30,000</button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://fwpzpihwxylnyejthnxq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3cHpwaWh3eHlsbnllanRobnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0ODE2ODAsImV4cCI6MjEwNzA1NzY4MH0.SMaJxy35YVHs4_Lj1C4v72V069CJEypvxsBhjC65h6I';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentAgent = null;
+
+    async function checkAuth() {
+      const savedUser = JSON.parse(localStorage.getItem('dalali_user'));
+      if (!savedUser || !savedUser.id) {
+        alert("Hujaingia kwenye mfumo! Tafadhali ingia kwanza.");
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const { data } = await supabaseClient.from('agents').select('*').eq('id', savedUser.id).maybeSingle();
+      currentAgent = data || savedUser;
+
+      document.getElementById('agent-display-name').innerText = currentAgent.full_name || 'Dalali';
+      document.getElementById('user-avatar-initial').innerText = (currentAgent.full_name || 'D').charAt(0).toUpperCase();
+
+      loadWalletBalance();
+      loadMyProperties();
+    }
+
+    async function loadWalletBalance() {
+      const { data } = await supabaseClient.from('wallets').select('*').eq('agent_id', currentAgent.id).maybeSingle();
+      if (data) {
+        document.getElementById('wallet-balance-text').innerText = `TZS ${Number(data.balance).toLocaleString()}`;
+        if (data.is_pro) {
+          document.getElementById('pro-badge-text').innerText = "PRO ACTIVE";
+          document.getElementById('pro-sub-text').innerText = "Akaunti yako ni PRO!";
+        }
+      }
+    }
+
+    async function handlePostProperty(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const file = document.getElementById('p-image').files[0];
+      const category = document.getElementById('p-category').value;
+
+      btn.disabled = true;
+      btn.innerText = "Inapakia Nyumba...";
+
+      try {
+        const filePath = `properties/${currentAgent.id}_${Date.now()}.${file.name.split('.').pop()}`;
+        await supabaseClient.storage.from('property-images').upload(filePath, file, { upsert: true });
+        const { data } = supabaseClient.storage.from('property-images').getPublicUrl(filePath);
+
+        await supabaseClient.from('properties').insert([{
+          title: document.getElementById('p-title').value,
+          category: category,
+          price: parseFloat(document.getElementById('p-price').value),
+          location: document.getElementById('p-location').value,
+          image_url: data.publicUrl,
+          agent_id: currentAgent.id
+        }]);
+
+        alert("🎉 Nyumba yako imepakiwa sokoni na itaonekana Home!");
+        document.getElementById('add-property-form').reset();
+        loadMyProperties();
+      } catch (err) {
+        alert("Kosa: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Post Nyumba Sokoni";
+      }
+    }
+
+    async function loadMyProperties() {
+      const container = document.getElementById('my-properties-list');
+      const { data: properties } = await supabaseClient.from('properties').select('*').eq('agent_id', currentAgent.id).order('created_at', { ascending: false });
+
+      if (!properties || properties.length === 0) {
+        container.innerHTML = `<p style="font-size: 12px; color: #94a3b8;">Hujapost nyumba yoyote bado.</p>`;
+        document.getElementById('total-properties-count').innerText = "0";
+        return;
+      }
+
+      document.getElementById('total-properties-count').innerText = properties.length.toString();
+
+      container.innerHTML = properties.map(p => `
+        <div class="property-card-item">
+          <img src="${p.image_url}" class="property-thumb" alt="${p.title}">
+          <div style="flex: 1; overflow: hidden;">
+            <div style="font-size: 14px; font-weight: 800; color: #38bdf8;">TZS ${Number(p.price).toLocaleString()}</div>
+            <div style="font-size: 12px; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.title}</div>
+            <div style="font-size: 11px; color: #94a3b8;">📍 ${p.location}</div>
+          </div>
+          <button class="btn-delete-sm" onclick="deleteProperty('${p.id}')">Futa</button>
+        </div>
+      `).join('');
+    }
+
+    async function deleteProperty(id) {
+      if (!confirm("Je, una uhakika unataka kufuta nyumba hii?")) return;
+      await supabaseClient.from('properties').delete().eq('id', id);
+      alert("Tangazo limefutwa!");
+      loadMyProperties();
+    }
+
+    function openWithdrawModal() {
+      const amount = prompt("Weka kiasi cha kutoa (TZS):");
+      const phone = prompt("Weka namba ya simu ya kupokea pesa:");
+      if (amount && phone) {
+        alert("🎉 Ombi la kutoa TZS " + Number(amount).toLocaleString() + " kwenda " + phone + " limetumwa kwa Admin!");
+      }
+    }
+
+    async function upgradeToPro() {
+      const phone = prompt("Weka namba yako ya M-Pesa/TigoPesa kulipia TZS 30,000:");
+      if (phone) {
+        alert("📱 Ombi la malipo limetumwa kwenye namba " + phone + ". Weka namba yako ya siri (PIN).");
+        await supabaseClient.from('wallets').update({ is_pro: true }).eq('agent_id', currentAgent.id);
+        alert("🎉 Hongera! Akaunti yako sasa ni PRO!");
+        loadWalletBalance();
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('dalali_user');
+      window.location.href = 'login.html';
+    }
+
+    checkAuth();
+  </script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0e8f80">
+  <title>Mwongozo wa Safari na Ramani - DalaliFasta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS for Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Leaflet Routing Machine JS -->
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+  <style>
+    :root {
+      --brand: #0e8f80;
+      --brand-dark: #0a6b60;
+      --brand-soft: #e3f4f1;
+      --ink: #14201e;
+      --muted: #6b7a77;
+      --line: #e6ecea;
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --success: #25D366;
+      --danger: #e74c3c;
+      --radius: 24px;
+      --container-max: 1200px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+
+    header {
+      position: sticky; top: 0; z-index: 1000;
+      background: rgba(244, 247, 246, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .navbar {
+      max-width: var(--container-max); margin: 0 auto;
+      padding: 12px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .header-logo-img { width: 40px; height: 40px; object-fit: cover; border-radius: 12px; background: #fff; }
+    .logo-text { font-size: 18px; font-weight: 800; }
+    .logo-text span { color: var(--brand); }
+
+    .desktop-links { display: none; align-items: center; gap: 24px; list-style: none; }
+    .desktop-links a { font-size: 14px; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .desktop-links a.active, .desktop-links a:hover { color: var(--brand); }
+
+    .auth-btns { display: none; gap: 8px; }
+    .btn {
+      padding: 8px 16px; border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+    }
+    .btn-outline { border: 2px solid var(--brand); color: var(--brand); background: transparent; }
+    .btn-primary { background: var(--brand); color: #fff; }
+
+    /* Map Layout */
+    .map-container {
+      flex: 1;
+      width: 100%;
+      position: relative;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating Control Box on Map */
+    .map-overlay-card {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 999;
+      background: #fff;
+      padding: 14px 16px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(20,32,30,0.16);
+      max-width: 340px;
+      width: calc(100% - 32px);
+    }
+    .map-title { font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .map-sub { font-size: 11.5px; color: var(--muted); line-height: 1.4; margin-bottom: 10px; }
+
+    .btn-trip {
+      width: 100%;
+      background: var(--success);
+      color: #fff;
+      padding: 12px;
+      border-radius: 999px;
+      font-size: 13.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+      transition: background 0.2s;
+    }
+    .btn-trip:hover { background: #1ebe57; }
+    .btn-trip:disabled { opacity: 0.5; cursor: not-allowed; background: #ccc; box-shadow: none; display: none; }
+
+    .btn-clear-route {
+      width: 100%;
+      background: var(--danger);
+      color: #fff;
+      padding: 11px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      display: none; /* Inatoweka kabisa isionekane hadi safari ianzishwe */
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+      transition: background 0.2s;
+    }
+    .btn-clear-route:hover { background: #c0392b; }
+
+    /* Custom Popup styling inside Leaflet */
+    .leaflet-popup-content-wrapper {
+      border-radius: 16px;
+      padding: 4px;
+    }
+    .leaflet-popup-content {
+      font-family: 'Poppins', sans-serif;
+      margin: 12px;
+      min-width: 200px;
+    }
+    .popup-img { width: 100%; height: 115px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; background: #eee; }
+    .popup-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+    .popup-price { font-size: 13px; font-weight: 700; color: var(--brand); margin-bottom: 6px; }
+    .popup-btn {
+      display: inline-block;
+      background: var(--brand);
+      color: #fff;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    /* Bottom tab bar for mobile */
+    .tabbar {
+      position: fixed; left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      z-index: 1200; max-width: 460px; margin: 0 auto;
+      background: #fff; border-radius: 999px; padding: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 10px 30px rgba(20, 32, 30, 0.18);
+    }
+    .tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 8px 4px; border-radius: 999px;
+      font-size: 10.5px; font-weight: 500; color: var(--muted);
+    }
+    .tab svg { width: 22px; height: 22px; }
+    .tab.active { background: var(--brand); color: #fff; }
+
+    @media (min-width: 900px) {
+      body { padding-bottom: 0; height: 100vh; }
+      .tabbar { display: none; }
+      .desktop-links { display: flex; }
+      .auth-btns { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="navbar">
+      <a href="index.html" class="brand">
+        <img src="download (9).jfif" alt="Logo" class="header-logo-img" onerror="this.src='https://via.placeholder.com/44?text=DF'">
+        <div>
+          <div class="logo-text">Dalali<span>Fasta</span></div>
+        </div>
+      </a>
+
+      <ul class="desktop-links">
+        <li>
+          <a href="index.html">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+            Nyumbani
+          </a>
+        </li>
+        <li>
+          <a href="videos.html">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Video Reels
+          </a>
+        </li>
+        <li>
+          <a href="map.html" class="active">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+            Ramani
+          </a>
+        </li>
+      </ul>
+
+      <div class="header-actions">
+        <div class="auth-btns">
+          <a href="login.html" class="btn btn-outline">Ingia</a>
+          <a href="register.html" class="btn btn-primary">Jisajili</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="map-container">
+    <div class="map-overlay-card">
+      <div class="map-title">🚗 Mwongozo wa Safari</div>
+      <div class="map-sub" id="selected-property-status">Gusa nyumba yoyote kwenye ramani ili uanze safari ya kwenda kuiona.</div>
+      <button type="button" class="btn-trip" id="start-trip-btn" onclick="startTripToProperty()" disabled>
+        🚀 Anzisha Safari
+      </button>
+      <button type="button" class="btn-clear-route" id="clear-route-btn" onclick="clearTripRoute()">
+        🗑️ Futa Njia / Maliza Safari
+      </button>
+    </div>
+    <div id="map"></div>
+  </main>
+
+  <nav class="tabbar" aria-label="Menyu kuu">
+    <a href="index.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      Nyumbani
+    </a>
+    <a href="map.html" class="tab active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+      Ramani
+    </a>
+    <a href="login.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>
+      Ingia
+    </a>
+    <a href="register.html" class="tab">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      Jisajili
+    </a>
+  </nav>
+
+  <script>
+    const SUPABASE_URL = 'https://fwpzpihwxylnyejthnxq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3cHpwaWh3eHlsbnllanRobnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0ODE2ODAsImV4cCI6MjEwNzA1NzY4MH0.SMaJxy35YVHs4_Lj1C4v72V069CJEypvxsBhjC65h6I';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const GEOAPIFY_API_KEY = '61b36c57c803483a80afdef016c39f8c';
+
+    // Anzisha Ramani
+    const map = L.map('map').setView([-6.7924, 39.2083], 13);
+
+    L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_API_KEY}`, {
+      maxZoom: 20,
+      attribution: 'Powered by Geoapify | © OpenStreetMap'
+    }).addTo(map);
+
+    let selectedProperty = null;
+    let routingControl = null;
+    let userLiveMarker = null;
+    let userCoords = null;
+    const FALLBACK_IMG = 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=600';
+
+    // Washa GPS ya simu / PC kufuatilia eneo la sasa
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        (position) => {
+          userCoords = [position.coords.latitude, position.coords.longitude];
+
+          if (!userLiveMarker) {
+            const greenIcon = L.divIcon({
+              className: 'live-gps-icon',
+              html: '<div style="background-color: #25D366; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>',
+              iconSize: [18, 18]
+            });
+            userLiveMarker = L.marker(userCoords, { icon: greenIcon }).addTo(map)
+              .bindPopup('<b>Upo Hapa</b>');
+          } else {
+            userLiveMarker.setLatLng(userCoords);
+          }
+        },
+        (error) => { console.warn('Inatafuta GPS...'); },
+        { enableHighAccuracy: true }
+      );
+    }
+
+    // Anzisha safari, zoom moja kwa moja kwenye eneo la safari na uchore mstari wa kisasa wa Bolt
+    function startTripToProperty() {
+      if (!selectedProperty) {
+        alert('Tafadhali chagua nyumba kwanza kwenye ramani.');
+        return;
+      }
+      if (!userCoords) {
+        alert('Inasubiri kupata eneo lako la GPS. Hakikisha GPS imewashwa.');
+        return;
+      }
+
+      if (routingControl) {
+        map.removeControl(routingControl);
+      }
+
+      // Mstari wenye mtindo wa Bolt (rangi safi ya kijani na unene mzuri)
+      routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(userCoords[0], userCoords[1]),
+          L.latLng(selectedProperty.lat, selectedProperty.lng)
+        ],
+        routeWhileDragging: false,
+        language: 'sw',
+        createMarker: function() { return null; },
+        lineOptions: {
+          styles: [
+            { color: '#10b981', opacity: 0.9, weight: 7 }
+          ]
+        }
+      }).addTo(map);
+
+      // Auto-zoom na kusogea kwenye eneo lote la safari
+      map.fitBounds([userCoords, [selectedProperty.lat, selectedProperty.lng]], { padding: [60, 60] });
+      
+      // Badili vifungo: Ficha kitufe cha kuanza, onesha kitufe cha kufuta njia
+      document.getElementById('start-trip-btn').style.display = 'none';
+      document.getElementById('clear-route-btn').style.display = 'flex';
+      
+      document.getElementById('selected-property-status').innerHTML = `<b>Safari inaendelea:</b> ${selectedProperty.title}`;
+    }
+
+    // Kazi ya kufuta mstari wa njia na kutowesha kitufe kabisa
+    function clearTripRoute() {
+      if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+      }
+      
+      // Ficha kitufe cha kufuta njia kabisa, rudisha kitufe cha kuanza safari
+      document.getElementById('clear-route-btn').style.display = 'none';
+      const startBtn = document.getElementById('start-trip-btn');
+      startBtn.style.display = 'flex';
+      startBtn.disabled = true;
+      
+      selectedProperty = null;
+      document.getElementById('selected-property-status').innerHTML = `Gusa nyumba yoyote kwenye ramani ili uanze safari ya kwenda kuiona.`;
+      
+      if (userCoords) {
+        map.setView(userCoords, 14);
+      }
+    }
+
+    async function geocodeAddress(addressText) {
+      try {
+        const url = `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(addressText)}&limit=1&apiKey=${GEOAPIFY_API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.features && data.features.length > 0) {
+          const [lon, lat] = data.features[0].geometry.coordinates;
+          return { lat, lon };
+        }
+      } catch (e) {
+        console.warn('Geocode error:', addressText);
+      }
+      return null;
+    }
+
+    async function loadPropertiesOnMap() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('properties')
+          .select('*');
+
+        if (error || !data) return;
+
+        const bounds = [];
+
+        for (const item of data) {
+          let lat = item.latitude;
+          let lng = item.longitude;
+
+          if (!lat || !lng) {
+            const locName = item.location || 'Dar es Salaam, Tanzania';
+            const coords = await geocodeAddress(locName);
+            if (coords) {
+              lat = coords.lat;
+              lng = coords.lon;
+            } else {
+              continue;
+            }
+          }
+
+          bounds.push([lat, lng]);
+
+          const imgUrl = item.image_url || (Array.isArray(item.images) && item.images[0]) || FALLBACK_IMG;
+          const title = item.title || 'Mali Mpya';
+          const price = Number(item.price || 0).toLocaleString();
+          const locationText = item.location || 'Duniani';
+
+          const popupContent = `
+            <div>
+              <img src="${esc(imgUrl)}" class="popup-img" onerror="this.src='${FALLBACK_IMG}'">
+              <div class="popup-title">${esc(title)}</div>
+              <div class="popup-price">Tsh ${price}</div>
+              <div style="font-size:11px; color:#6b7a77; margin-bottom:8px;">📍 ${esc(locationText)}</div>
+              <button type="button" class="popup-btn" onclick="selectThisProperty(${lat}, ${lng}, '${esc(title)}')">Chagua Nyumba Hii</button>
+            </div>
+          `;
+
+          L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+        }
+
+        if (bounds.length > 0) {
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+        }
+
+      } catch (err) {
+        console.error('Hitilafu ya mtandao kwenye ramani:', err);
+      }
+    }
+
+    window.selectThisProperty = function(lat, lng, title) {
+      selectedProperty = { lat, lng, title };
+      document.getElementById('selected-property-status').innerHTML = `<b>Umeichagua:</b> ${title}<br><span style="color:var(--brand); font-weight:600;">Bonyeza kitufe cha safari hapa chini!</span>`;
+      const startBtn = document.getElementById('start-trip-btn');
+      startBtn.disabled = false;
+      map.closePopup();
+      map.flyTo([lat, lng], 16, { duration: 1.2 });
+    };
+
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    loadPropertiesOnMap();
+  </script>
+</body>
+</html>

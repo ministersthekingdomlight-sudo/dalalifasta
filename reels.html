@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DalaliFasta - Reels</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: #000; color: #fff; overflow: hidden; }
+
+        .reels-container {
+            height: 100vh;
+            width: 100vw;
+            max-width: 450px;
+            margin: 0 auto;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            position: relative;
+            background: #111;
+        }
+        .reels-container::-webkit-scrollbar { display: none; }
+
+        .reel-card {
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: start;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        .overlay {
+            position: absolute;
+            bottom: 30px; left: 15px; right: 70px;
+            z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        .title { font-size: 18px; font-weight: 700; margin-bottom: 5px; }
+        .price { font-size: 20px; font-weight: 800; color: #4f46e5; margin-bottom: 5px; }
+        .loc { font-size: 13px; color: #ddd; }
+
+        .actions {
+            position: absolute; right: 15px; bottom: 50px;
+            display: flex; flex-direction: column; gap: 20px; z-index: 10;
+        }
+        .btn-call {
+            width: 50px; height: 50px; border-radius: 50%; background: #10b981;
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .top-bar {
+            position: absolute; top: 15px; left: 15px; z-index: 20;
+            background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px;
+            text-decoration: none; color: #fff; font-size: 13px; font-weight: 600;
+        }
+
+        .loader { display: flex; height: 100vh; align-items: center; justify-content: center; text-align: center; color: #888; }
+    </style>
+</head>
+<body>
+
+    <a href="upload-reel.html" class="top-bar"><i class="fa-solid fa-plus"></i> Pakia Video Mpya</a>
+
+    <div class="reels-container" id="container">
+        <div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> Inapakia Video...</div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://uisxkuhtllxdmrbsmyjo.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpc3hrdWh0bGx4ZG1yYnNteWpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNjkwMjgsImV4cCI6MjEwNjk0NTAyOH0.HKjQrls6nc2Di3hdNRuyo4n8g14_EBmEHgEcnTf31UI";
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function fetchVideos() {
+            const container = document.getElementById('container');
+            try {
+                const { data, error } = await supabase.from('reels').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="loader">Hakuna video zilizowekwa bado.</div>`;
+                    return;
+                }
+
+                container.innerHTML = "";
+                data.forEach(item => {
+                    container.innerHTML += `
+                        <div class="reel-card">
+                            <video src="${item.video_url}" loop playsinline onclick="this.paused ? this.play() : this.pause()"></video>
+                            <div class="overlay">
+                                <div class="title">${item.title}</div>
+                                <div class="price">TZS ${Number(item.price).toLocaleString()}</div>
+                                <div class="loc"><i class="fa-solid fa-location-dot"></i> ${item.location}</div>
+                            </div>
+                            <div class="actions">
+                                <a href="tel:${item.phone_number}" class="btn-call"><i class="fa-solid fa-phone"></i></a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Auto Play kwenye Scroll
+                const videos = document.querySelectorAll('video');
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) entry.target.play().catch(() => {});
+                        else entry.target.pause();
+                    });
+                }, { threshold: 0.6 });
+
+                videos.forEach(v => observer.observe(v));
+
+            } catch (err) {
+                container.innerHTML = `<div class="loader" style="color:red;">Kosa: ${err.message}</div>`;
+            }
+        }
+
+        fetchVideos();
+    </script>
+</body>
+</html>

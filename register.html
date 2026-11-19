@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0e8f80">
+  <title>Jisajili kama Dalali - DalaliFasta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --brand: #0e8f80;
+      --brand-dark: #0a6b60;
+      --brand-soft: #e3f4f1;
+      --ink: #14201e;
+      --muted: #6b7a77;
+      --line: #e6ecea;
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --danger: #e53935;
+      --radius: 26px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: 0 12px 35px rgba(20, 32, 30, 0.08);
+      border: 1px solid var(--line);
+    }
+    .brand-top { text-align: center; margin-bottom: 20px; }
+    .brand-top h1 { font-size: 24px; font-weight: 800; }
+    .brand-top h1 span { color: var(--brand); }
+    .brand-top p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* Profile Avatar Picker */
+    .avatar-picker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 18px;
+      cursor: pointer;
+    }
+    .avatar-circle {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: var(--brand-soft);
+      border: 2.5px dashed var(--brand);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .avatar-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .avatar-circle svg { width: 28px; height: 28px; color: var(--brand); }
+    .avatar-hint { font-size: 12px; font-weight: 600; color: var(--brand-dark); margin-top: 6px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12.5px; font-weight: 600; margin-bottom: 5px; }
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      background: var(--bg);
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: 0.2s;
+    }
+    .form-control:focus {
+      border-color: var(--brand);
+      background: #fff;
+      box-shadow: 0 0 0 4px var(--brand-soft);
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      border-radius: 999px;
+      border: none;
+      background: var(--brand);
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 6px;
+      box-shadow: 0 8px 20px rgba(14, 143, 128, 0.25);
+    }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    #status-msg {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      display: none;
+    }
+    .err { display: block !important; background: #ffebee; color: var(--danger); }
+    .ok { display: block !important; background: #e8f5e9; color: #2e7d32; }
+    .load { display: block !important; background: var(--brand-soft); color: var(--brand-dark); }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .auth-footer a { color: var(--brand); font-weight: 700; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-card">
+    <div class="brand-top">
+      <h1>Dalali<span>Fasta</span></h1>
+      <p>Fungua akaunti yako ya udalali kwa sekunde chache</p>
+    </div>
+
+    <form id="registerForm">
+      <!-- Kuchagua Picha ya Profile -->
+      <label class="avatar-picker" for="avatarInput">
+        <div class="avatar-circle">
+          <img id="avatarPreview" alt="Picha yako">
+          <svg id="avatarPlaceholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <span class="avatar-hint">+ Weka Picha Yako ya Profile</span>
+        <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="previewImage(this)">
+      </label>
+
+      <div class="form-group">
+        <label class="form-label">Jina Kamili la Dalali / Kampuni</label>
+        <input type="text" id="fullName" class="form-control" placeholder="Mf: Juma Hassan Dalali" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Namba ya Simu (Itaonekana kwa Wateja)</label>
+        <input type="tel" id="phone" class="form-control" placeholder="0712345678" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Barua Pepe (Hiari / Si Lazima)</label>
+        <input type="email" id="email" class="form-control" placeholder="dalali@mfano.com">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nenosiri (Password)</label>
+        <input type="password" id="password" class="form-control" placeholder="Weka nenosiri lako" minlength="4" required>
+      </div>
+
+      <button type="submit" id="regBtn" class="btn-submit">Jisajili na Ingia Dashibodi</button>
+    </form>
+
+    <div id="status-msg"></div>
+
+    <div class="auth-footer">
+      Tayari una akaunti? <a href="login.html">Ingia Hapa</a><br><br>
+      <a href="index_2.html" style="color:var(--muted); font-weight:500;">← Rudi Nyumbani</a>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://fwpzpihwxylnyejthnxq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3cHpwaWh3eHlsbnllanRobnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0ODE2ODAsImV4cCI6MjEwNzA1NzY4MH0.SMaJxy35YVHs4_Lj1C4v72V069CJEypvxsBhjC65h6I';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Kama tayari ameshaingia, mpeleke moja kwa moja kwenye dashibodi yake
+    if (localStorage.getItem('dalali_user')) {
+      window.location.href = 'dashboard.html';
+    }
+
+    function previewImage(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.getElementById('avatarPreview');
+          img.src = e.target.result;
+          img.style.display = 'block';
+          document.getElementById('avatarPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('status-msg');
+      const btn = document.getElementById('regBtn');
+      const fullName = document.getElementById('fullName').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const avatarFile = document.getElementById('avatarInput').files[0];
+
+      status.className = 'load';
+      status.innerText = '⏳ Inatengeneza akaunti yako...';
+      btn.disabled = true;
+
+      try {
+        // 1. Angalia kama namba ya simu tayari imesajiliwa
+        const { data: existing } = await supabaseClient
+          .from('agents')
+          .select('id')
+          .eq('phone_number', phone)
+          .maybeSingle();
+
+        if (existing) {
+          throw new Error('Namba hii ya simu tayari imesajiliwa! Tafadhali ingia (Login).');
+        }
+
+        // 2. Kama amechagua picha ya profile, ipakie kwanza
+        let avatarUrl = '';
+        if (avatarFile) {
+          const cleanName = `avatars/${Date.now()}_${avatarFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+          const { error: upErr } = await supabaseClient.storage
+            .from('property-images')
+            .upload(cleanName, avatarFile, { upsert: true });
+
+          if (!upErr) {
+            const { data: urlData } = supabaseClient.storage
+              .from('property-images')
+              .getPublicUrl(cleanName);
+            avatarUrl = urlData.publicUrl;
+          }
+        }
+
+        // 3. Hifadhi taarifa za dalali kwenye jedwali la agents
+        const { data: newAgent, error: insErr } = await supabaseClient
+          .from('agents')
+          .insert([{
+            full_name: fullName,
+            phone_number: phone,
+            email: email || null,
+            password: password,
+            avatar_url: avatarUrl || null
+          }])
+          .select()
+          .single();
+
+        if (insErr) throw insErr;
+
+        // 4. Hifadhi session ya dalali huyu pekee na mpeleke dashibodi yake
+        localStorage.setItem('dalali_user', JSON.stringify(newAgent));
+        status.className = 'ok';
+        status.innerText = '✅ Usajili umekamilika! Unapelekwa kwenye dashibodi yako...';
+
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1000);
+
+      } catch (err) {
+        status.className = 'err';
+        status.innerText = '❌ ' + err.message;
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

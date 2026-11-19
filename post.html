@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalali Mayao - Posti Nyumba</title>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin: auto; }
+        h2 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        textarea { height: 100px; resize: vertical; }
+        button { background-color: #28a745; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        #status { margin-top: 15px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Posti Nyumba Mpya - Dalali Mayao</h2>
+    <form id="propertyForm">
+        <div class="form-group">
+            <label>Aina / Jina la Nyumba:</label>
+            <input type="text" id="title" required placeholder="Mf. Nyumba ya Vyumba 3 Tazara">
+        </div>
+        <div class="form-group">
+            <label>Bei kwa Mwezi (TZS):</label>
+            <input type="number" id="price" required placeholder="Mf. 500000">
+        </div>
+        <div class="form-group">
+            <label>Eneo (Location):</label>
+            <input type="text" id="location" required placeholder="Mf. Tazara, Dar es Salaam">
+        </div>
+        <div class="form-group">
+            <label>Maelezo Zaidi:</label>
+            <textarea id="description" required placeholder="Maelezo ya nyumba na huduma zake..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Pakia Video ya Nyumba:</label>
+            <input type="file" id="videoFile" accept="video/*" required>
+        </div>
+        <button type="submit" id="submitBtn">Chapisha Nyumba</button>
+    </form>
+    <div id="status"></div>
+</div>
+
+<script>
+    // Supabase Credentials Zako
+    const SUPABASE_URL = 'https://fwpzpihwxylnyejthnxq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3cHpwaWh3eHlsbnllanRobnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0ODE2ODAsImV4cCI6MjEwNzA1NzY4MH0.SMaJxy35YVHs4_Lj1C4v72V069CJEypvxsBhjC65h6I';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const form = document.getElementById('propertyForm');
+    const statusDiv = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusDiv.style.color = "blue";
+        statusDiv.innerText = "Inapakia video na kuhifadhi data...";
+        submitBtn.disabled = true;
+
+        try {
+            const file = document.getElementById('videoFile').files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
+            const filePath = `videos/${fileName}`;
+
+            // 1. Pakia Video kwenye Supabase Storage Bucket ("house-videos")
+            const { data: storageData, error: storageError } = await supabaseClient.storage
+                .from('house-videos')
+                .upload(filePath, file);
+
+            if (storageError) throw storageError;
+
+            // 2. Pata Public URL ya Video iliyopakiwa
+            const { data: publicUrlData } = supabaseClient.storage
+                .from('house-videos')
+                .getPublicUrl(filePath);
+
+            const videoPublicUrl = publicUrlData.publicUrl;
+
+            // 3. Hifadhi taarifa kwenye Jedwali la 'properties'
+            const title = document.getElementById('title').value;
+            const price = document.getElementById('price').value;
+            const location = document.getElementById('location').value;
+            const description = document.getElementById('description').value;
+
+            const { error: dbError } = await supabaseClient
+                .from('properties')
+                .insert([
+                    { title, price, location, description, video_url: videoPublicUrl }
+                ]);
+
+            if (dbError) throw dbError;
+
+            statusDiv.style.color = "green";
+            statusDiv.innerText = "Nyumba na video vimefanikiwa kupostiwa!";
+            form.reset();
+
+        } catch (error) {
+            console.error(error);
+            statusDiv.style.color = "red";
+            statusDiv.innerText = "Kosa limetokea: " + error.message;
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>
